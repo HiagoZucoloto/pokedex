@@ -2,13 +2,20 @@
 import axios from "axios";
 
 // NextJS imports
-import Link from "next/link";
+import { useEffect, useState } from "react";
+import PokemonCard from "../components/pokemonCard";
+import Pokemon from "./pokemon";
 
 export default function Home() {
+  const [pokemons, setPokemons] = useState([]);
+  useEffect(() => {
+    getPokemons();
+  }, []);
+
   const getPokemons = () => {
     axios
-      .get("https://pokeapi.co/api/v2/pokemon?limit=50")
-      .then((res) => console.log(res))
+      .get("https://pokeapi.co/api/v2/pokemon?limit=10")
+      .then((res) => setPokemons(res.data.results))
       .catch((err) => console.log(err));
   };
 
@@ -30,29 +37,9 @@ export default function Home() {
       </header>
 
       <section className="py-4">
-        {[1, 2, 3, 4, 5].map((item, key) => (
+        {pokemons.map((pokemon, key) => (
           <div key={key}>
-            <div className="flex gap-4">
-              <Link
-                href={"/pokemon"}
-                className="w-full my-2 bg-gray-200 rounded-2xl p-4 text-center"
-              >
-                <div className="">IMG**</div>
-
-                <div className="py-1">NAME</div>
-                <div>NUMBER</div>
-              </Link>
-
-              <Link
-                href={"/pokemon"}
-                className="w-full my-2 bg-gray-200 rounded-2xl p-4 text-center"
-              >
-                <div className="">IMG**</div>
-
-                <div className="py-1">NAME</div>
-                <div>NUMBER</div>
-              </Link>
-            </div>
+            <PokemonCard name={pokemon.name} />
           </div>
         ))}
       </section>
