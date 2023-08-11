@@ -1,19 +1,29 @@
 import Link from "next/link";
 
-type PokemonCard = {
+type PokemonCardProps = {
   name: string;
+  image: string;
+  id: number;
 };
 
-export default function PokemonCard({ name } = PokemonCard) {
+const PokemonCard: React.FC<PokemonCardProps> = ({ name, image, id }) => {
   return (
     <Link
       href={"/pokemon"}
-      className="my-2 bg-gray-200 rounded-2xl p-4 text-center grid gap-1"
+      className="my-2 bg-gray-200 rounded-2xl p-4 text-center grid"
     >
-      <div className="">IMG**</div>
+      <img
+        src={image}
+        alt={name}
+        className="mx-auto"
+        width={"400px"}
+        height={"400px"}
+      />
+      <h3 className="text-lg font-semibold text-center">{name}</h3>
 
-      <div className="py-1">{name}</div>
-      <div>NUMBER</div>
+      <div className="text-sm font-light">{id}</div>
     </Link>
   );
-}
+};
+
+export default PokemonCard;

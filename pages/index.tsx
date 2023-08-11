@@ -1,22 +1,44 @@
-// Other imports
 import axios from "axios";
-
-// NextJS imports
 import { useEffect, useState } from "react";
 import PokemonCard from "../components/pokemonCard";
-import Pokemon from "./pokemon";
 
-export default function Home() {
-  const [pokemons, setPokemons] = useState([]);
+// Definindo tipagem de dados retornado pela API
+interface PokemonData {
+  name: string;
+  sprites: {
+    front_default: string;
+  };
+  id: number;
+}
+
+const Home: React.FC = () => {
+  const [pokemons, setPokemons] = useState<PokemonData[]>([]); // Tipando o estado
+
   useEffect(() => {
     getPokemons();
   }, []);
 
-  const getPokemons = () => {
-    axios
-      .get("https://pokeapi.co/api/v2/pokemon?limit=10")
-      .then((res) => setPokemons(res.data.results))
-      .catch((err) => console.log(err));
+  const getPokemons = async () => {
+    try {
+      var endpoints = [];
+      for (var i = 1; i < 11; i++) {
+        endpoints.push(`https://pokeapi.co/api/v2/pokemon/${i}/`);
+      }
+
+      const responses = await axios.all(
+        endpoints.map((endpoint) => axios.get(endpoint))
+      );
+
+      const pokemonData: PokemonData[] = responses.map((response) => ({
+        name: response.data.name,
+        sprites: response.data.sprites,
+        id: response.data.id,
+      }));
+
+      setPokemons(pokemonData);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -36,16 +58,18 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="py-4">
+      <section className="py-4 grid grid-cols-2 gap-4">
         {pokemons.map((pokemon, key) => (
           <div key={key}>
-            <PokemonCard name={pokemon.name} />
+            <PokemonCard
+              name={pokemon.name}
+              image={pokemon.sprites.front_default}
+              id={pokemon.id}
+            />
           </div>
         ))}
       </section>
     </main>
   );
-}
-function fetchData() {
-  throw new Error("Function not implemented.");
-}
+};
+export default Home;
