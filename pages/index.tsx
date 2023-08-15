@@ -21,7 +21,7 @@ const Home: React.FC = () => {
   const getPokemons = async () => {
     try {
       var endpoints = [];
-      for (var i = 1; i < 11; i++) {
+      for (var i = 1; i < 13; i++) {
         endpoints.push(`https://pokeapi.co/api/v2/pokemon/${i}/`);
       }
 
