@@ -1,46 +1,17 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { GetServerSideProps } from "next";
 import PokemonCard from "../components/pokemonCard";
 
-// Definindo tipagem de dados retornado pela API
 interface PokemonData {
   name: string;
-  sprites: {
-    front_default: string;
-  };
+  image: string;
   id: number;
 }
 
-const Home: React.FC = () => {
-  const [pokemons, setPokemons] = useState<PokemonData[]>([]); // Tipando o estado
+interface HomeProps {
+  repositories: PokemonData[];
+}
 
-  useEffect(() => {
-    getPokemons();
-  }, []);
-
-  const getPokemons = async () => {
-    try {
-      var endpoints = [];
-      for (var i = 1; i < 13; i++) {
-        endpoints.push(`https://pokeapi.co/api/v2/pokemon/${i}/`);
-      }
-
-      const responses = await axios.all(
-        endpoints.map((endpoint) => axios.get(endpoint))
-      );
-
-      const pokemonData: PokemonData[] = responses.map((response) => ({
-        name: response.data.name,
-        sprites: response.data.sprites,
-        id: response.data.id,
-      }));
-
-      setPokemons(pokemonData);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
+export default function Home({ repositories }: HomeProps) {
   return (
     <main className="px-8">
       <header>
@@ -59,17 +30,35 @@ const Home: React.FC = () => {
       </header>
 
       <section className="py-4 grid grid-cols-2 gap-4">
-        {pokemons.map((pokemon, key) => (
-          <div key={key}>
-            <PokemonCard
-              name={pokemon.name}
-              image={pokemon.sprites.front_default}
-              id={pokemon.id}
-            />
-          </div>
+        {repositories.map((pokemon: PokemonData) => (
+          <PokemonCard
+            name={pokemon.name}
+            image={pokemon.image}
+            id={pokemon.id}
+          ></PokemonCard>
         ))}
       </section>
     </main>
   );
+}
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const response = await fetch("https://pokeapi.co/api/v2/pokemon/");
+  const data = await response.json();
+
+  const pokemonData: PokemonData[] = data.results.map(
+    (result: { name: string; url: string }) => ({
+      name: result.name,
+      image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${
+        result.url.split("/")[6]
+      }.png`,
+      id: parseInt(result.url.split("/")[6]),
+    })
+  );
+
+  return {
+    props: {
+      repositories: pokemonData,
+    },
+  };
 };
-export default Home;

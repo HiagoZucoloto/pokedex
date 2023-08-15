@@ -16,8 +16,8 @@ const PokemonCard: React.FC<PokemonCardProps> = ({ name, image, id }) => {
         src={image}
         alt={name}
         className="mx-auto"
-        width={"400px"}
-        height={"400px"}
+        width={500}
+        height={500}
       />
       <h3 className="text-lg font-semibold text-center">{name}</h3>
 
