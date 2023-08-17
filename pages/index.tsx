@@ -11,6 +11,31 @@ interface HomeProps {
   repositories: PokemonData[];
 }
 
+export const getServerSideProps: GetServerSideProps = async () => {
+  const response = await fetch("https://pokeapi.co/api/v2/pokemon/");
+  const data = await response.json();
+
+  const pokemonDataPromises = data.results.map(
+    async (result: { name: string; url: string }) => {
+      const pokemonResponse = await fetch(result.url);
+      const pokemonDetails = await pokemonResponse.json();
+      return {
+        name: result.name,
+        image: pokemonDetails.sprites.front_default,
+        id: pokemonDetails.id,
+      };
+    }
+  );
+
+  const pokemonData: PokemonData[] = await Promise.all(pokemonDataPromises);
+
+  return {
+    props: {
+      repositories: pokemonData,
+    },
+  };
+};
+
 export default function Home({ repositories }: HomeProps) {
   return (
     <main className="px-8">
@@ -32,6 +57,7 @@ export default function Home({ repositories }: HomeProps) {
       <section className="py-4 grid grid-cols-2 gap-4">
         {repositories.map((pokemon: PokemonData) => (
           <PokemonCard
+            key={pokemon.id}
             name={pokemon.name}
             image={pokemon.image}
             id={pokemon.id}
@@ -41,24 +67,3 @@ export default function Home({ repositories }: HomeProps) {
     </main>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async () => {
-  const response = await fetch("https://pokeapi.co/api/v2/pokemon/");
-  const data = await response.json();
-
-  const pokemonData: PokemonData[] = data.results.map(
-    (result: { name: string; url: string }) => ({
-      name: result.name,
-      image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${
-        result.url.split("/")[6]
-      }.png`,
-      id: parseInt(result.url.split("/")[6]),
-    })
-  );
-
-  return {
-    props: {
-      repositories: pokemonData,
-    },
-  };
-};

@@ -9,7 +9,7 @@ type PokemonCardProps = {
 const PokemonCard: React.FC<PokemonCardProps> = ({ name, image, id }) => {
   return (
     <Link
-      href={"/pokemon"}
+      href={`/pokemon/${id}`} // link com o ID de cada pokemon
       className="my-2 bg-gray-200 rounded-2xl p-4 text-center grid"
     >
       <img
