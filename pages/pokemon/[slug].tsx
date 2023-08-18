@@ -1,10 +1,17 @@
 import { GetServerSideProps } from "next";
 import Link from "next/link";
 
-import React, { useRef, useState } from "react";
+// React Icons
+import { BsArrowLeftShort } from "react-icons/bs";
+
+// Swiper
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
-import "swiper/css/pagination";
+
+// components
+import { getColorClass } from "../../src/components/utils/colors";
+// import Img from "../../src/utils/imgBase";
+// problemas ao usar a função <Img>
 
 const swiperBar = [
   {
@@ -16,10 +23,12 @@ const swiperBar = [
 ];
 
 interface PokemonDetail {
+  moves: any;
   name: string;
   image: string;
+  imageBack: string;
+  imageShiny: string;
   id: number;
-  // outras informações dos pokemons
 }
 
 interface PokemonProps {
@@ -41,8 +50,10 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const pokemon: PokemonDetail = {
     name: data.name,
     image: data.sprites.front_default,
+    imageBack: data.sprites.back_default,
+    imageShiny: data.sprites.front_shiny,
     id: data.id,
-    // outras informações dos pokemons
+    moves: data.moves,
   };
 
   return {
@@ -53,27 +64,28 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
 };
 
 const PokemonPage: React.FC<PokemonProps> = ({ pokemon }) => {
+  const colorClass = getColorClass(pokemon.id);
   return (
     <main className="px-8">
       <header className="flex w-full pt-12">
-        <Link href={"/"} className="w-[10%]">
-          {"<"}
+        <Link href={"/"} className="w-[10%] text-4xl">
+          <BsArrowLeftShort />
         </Link>
 
         <div className="w-[90%] grid gap-1 text-center">
-          <div className="text-3xl">{pokemon.name}</div>
+          <div className="text-3xl font-medium capitalize">{pokemon.name}</div>
           <div>{pokemon.id}</div>
         </div>
       </header>
 
-      <section className="bg-gray-200 rounded-xl mt-6">
+      <section className={`${colorClass} rounded-xl mt-6`}>
         <div className="text-center py-2">
           <img
             src={pokemon.image}
             alt={pokemon.name}
-            className="mx-auto"
-            width={"200px"}
-            height={"200px"}
+            className="mx-auto object-cover w-full h-full"
+            width={"500px"}
+            height={"500px"}
           />
         </div>
       </section>
@@ -119,7 +131,7 @@ const PokemonPage: React.FC<PokemonProps> = ({ pokemon }) => {
 
       <section>
         <div className="flex gap-4">
-          <div className="bg-gray-200 rounded-2xl">
+          <div className={`${colorClass} rounded-2xl`}>
             <img
               src={pokemon.image}
               alt={pokemon.name}
@@ -127,17 +139,17 @@ const PokemonPage: React.FC<PokemonProps> = ({ pokemon }) => {
               height={"120px"}
             />
           </div>
-          <div className="bg-gray-200 rounded-2xl">
+          <div className={`${colorClass} rounded-2xl`}>
             <img
-              src={pokemon.image}
+              src={pokemon.imageBack}
               alt={pokemon.name}
               width={"100px"}
               height={"120px"}
             />
           </div>
-          <div className="bg-gray-200 rounded-2xl">
+          <div className={`${colorClass} rounded-2xl`}>
             <img
-              src={pokemon.image}
+              src={pokemon.imageShiny}
               alt={pokemon.name}
               width={"100px"}
               height={"120px"}
@@ -147,8 +159,16 @@ const PokemonPage: React.FC<PokemonProps> = ({ pokemon }) => {
       </section>
 
       <section className="py-4 grid gap-1">
-        <div className="text-md font-medium">Mega Evolution</div>
-        <div className="text-md">Info of pokemon text</div>
+        <ul>
+          <div className="text-lg font-medium">Seus principais ataques:</div>
+          {pokemon.moves
+            .slice(0, 4)
+            .map((move: { move: { name: string } }, index: number) => (
+              <li key={index} className="text-lg">
+                {">"} {move.move.name}
+              </li>
+            ))}
+        </ul>
       </section>
     </main>
   );
