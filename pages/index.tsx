@@ -1,75 +1,111 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
-import PokemonCard from "../components/pokemonCard";
+import { GetServerSideProps } from "next";
+import { useState } from "react";
 
-// Definindo tipagem de dados retornado pela API
+// React Icons
+import { FaSearch } from "react-icons/fa";
+import { LuSettings2 } from "react-icons/lu";
+
+// Components
+import PokemonCard from "../src/components/pokemonCard";
+
 interface PokemonData {
   name: string;
-  sprites: {
-    front_default: string;
-  };
+  image: string;
+  imageBack: string;
+  imageShiny: string;
   id: number;
+  moves: string;
 }
 
-const Home: React.FC = () => {
-  const [pokemons, setPokemons] = useState<PokemonData[]>([]); // Tipando o estado
+interface HomeProps {
+  repositories: PokemonData[];
+}
 
-  useEffect(() => {
-    getPokemons();
-  }, []);
+export const getServerSideProps: GetServerSideProps = async () => {
+  const response = await fetch("https://pokeapi.co/api/v2/pokemon/");
+  const data = await response.json();
 
-  const getPokemons = async () => {
-    try {
-      var endpoints = [];
-      for (var i = 1; i < 13; i++) {
-        endpoints.push(`https://pokeapi.co/api/v2/pokemon/${i}/`);
-      }
-
-      const responses = await axios.all(
-        endpoints.map((endpoint) => axios.get(endpoint))
-      );
-
-      const pokemonData: PokemonData[] = responses.map((response) => ({
-        name: response.data.name,
-        sprites: response.data.sprites,
-        id: response.data.id,
-      }));
-
-      setPokemons(pokemonData);
-    } catch (error) {
-      console.log(error);
+  const pokemonDataPromises = data.results.map(
+    async (result: { name: string; url: string }) => {
+      const pokemonResponse = await fetch(result.url);
+      const pokemonDetails = await pokemonResponse.json();
+      return {
+        name: result.name,
+        image: pokemonDetails.sprites.front_default,
+        id: pokemonDetails.id,
+      };
     }
+  );
+
+  const pokemonData: PokemonData[] = await Promise.all(pokemonDataPromises);
+
+  return {
+    props: {
+      repositories: pokemonData,
+    },
+  };
+};
+
+export default function Home({ repositories }: HomeProps) {
+  const [searchTerm, setSearchTerm] = useState(""); // Estado para a barra de pesquisa
+  const [searchResults, setSearchResults] = useState(repositories); // Estado para os resultados da pesquisa
+
+  // Função para realizar a pesquisa
+  const searchPokemon = async () => {
+    const searchTermLower = searchTerm.toLowerCase();
+    const results = repositories.filter(
+      (pokemon) =>
+        pokemon.name.toLowerCase().includes(searchTermLower) ||
+        String(pokemon.id).includes(searchTermLower)
+    );
+    setSearchResults(results);
   };
 
   return (
     <main className="px-8">
       <header>
-        <h1 className="text-5xl font-semibold py-6 mt-6">Pokédex</h1>
+        <div>
+          <h1 className="text-5xl font-semibold py-4 mt-8">Pokédex</h1>
 
-        <div className="leading-normal text-lg">
-          Search for a Pokémon by name or using its National Pokédex number.
-        </div>
-
-        <div className="flex gap-4 w-full py-6">
-          <div className="w-[80%] bg-zinc-100 p-5 rounded-2xl">
-            **Search Engine
+          <div className="leading-8 text-lg font-light">
+            search for a Pokémon by name or using its National Pokédex number.
           </div>
-          <div className="w-[20%] bg-gray-500 p-5 rounded-2xl">ICON</div>
+
+          <div className="flex gap-3 w-full py-6">
+            <div className="flex w-[80%] bg-zinc-100 rounded-xl py-4">
+              <div className="ml-4 my-auto text-xl">
+                <FaSearch />
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Name or number"
+                className="w-full px-2 mx-2 py-1 rounded-lg bg-zinc-100
+                focus:outline-none focus:border-transparent focus:ring-transparent focus:ring-1"
+              />
+            </div>
+            <button
+              onClick={searchPokemon}
+              className="bg-slate-600 text-white rounded-xl px-4 text-3xl"
+            >
+              <LuSettings2 />
+            </button>
+          </div>
         </div>
       </header>
 
       <section className="py-4 grid grid-cols-2 gap-4">
-        {pokemons.map((pokemon, key) => (
-          <div key={key}>
-            <PokemonCard
-              name={pokemon.name}
-              image={pokemon.sprites.front_default}
-              id={pokemon.id}
-            />
-          </div>
+        {/* Mapeamento dos resultados da pesquisa */}
+        {searchResults.map((pokemon: PokemonData) => (
+          <PokemonCard
+            key={pokemon.id}
+            name={pokemon.name}
+            image={pokemon.image}
+            id={pokemon.id}
+          ></PokemonCard>
         ))}
       </section>
     </main>
   );
-};
-export default Home;
+}
