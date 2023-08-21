@@ -1,26 +1,9 @@
-import { GetServerSideProps } from "next";
+import { GetStaticProps, GetStaticPaths } from "next";
 import Link from "next/link";
-
-// React Icons
 import { BsArrowLeftShort } from "react-icons/bs";
-
-// Swiper
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
-
-// components
 import { getColorClass } from "../../src/components/utils/colors";
-// import Img from "../../src/utils/imgBase";
-// problemas ao usar a função <Img>
-
-const swiperBar = [
-  {
-    form: "Forms",
-    detail: "Details",
-    type: "Types",
-    stat: "Stats",
-  },
-];
 
 interface PokemonDetail {
   moves: any;
@@ -35,7 +18,30 @@ interface PokemonProps {
   pokemon: PokemonDetail;
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+const swiperBar = [
+  {
+    form: "Forms",
+    detail: "Details",
+    type: "Types",
+    stat: "Stats",
+  },
+];
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const response = await fetch("https://pokeapi.co/api/v2/pokemon/");
+  const data = await response.json();
+
+  const paths = data.results.map((result: { name: string }) => ({
+    params: { slug: result.name },
+  }));
+
+  return {
+    paths,
+    fallback: false, // necessário para o StaticPaths funcionar, caso der erro; re-direciona para page 404
+  };
+};
+
+export const getStaticProps: GetStaticProps = async ({ params }) => {
   const slug = params?.slug;
 
   if (!slug) {
@@ -60,6 +66,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     props: {
       pokemon,
     },
+    revalidate: 5,
   };
 };
 

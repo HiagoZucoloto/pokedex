@@ -1,27 +1,19 @@
-import { GetServerSideProps } from "next";
 import { useState } from "react";
-
-// React Icons
 import { FaSearch } from "react-icons/fa";
 import { LuSettings2 } from "react-icons/lu";
-
-// Components
 import PokemonCard from "../src/components/pokemonCard";
 
 interface PokemonData {
   name: string;
   image: string;
-  imageBack: string;
-  imageShiny: string;
   id: number;
-  moves: string;
 }
 
 interface HomeProps {
   repositories: PokemonData[];
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export async function getStaticProps() {
   const response = await fetch("https://pokeapi.co/api/v2/pokemon/");
   const data = await response.json();
 
@@ -43,14 +35,14 @@ export const getServerSideProps: GetServerSideProps = async () => {
     props: {
       repositories: pokemonData,
     },
+    revalidate: 5, // revalidando a página a cada 5 segundos
   };
-};
+}
 
 export default function Home({ repositories }: HomeProps) {
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para a barra de pesquisa
-  const [searchResults, setSearchResults] = useState(repositories); // Estado para os resultados da pesquisa
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState(repositories);
 
-  // Função para realizar a pesquisa
   const searchPokemon = async () => {
     const searchTermLower = searchTerm.toLowerCase();
     const results = repositories.filter(
@@ -96,7 +88,7 @@ export default function Home({ repositories }: HomeProps) {
       </header>
 
       <section className="py-4 grid grid-cols-2 gap-4">
-        {/* Mapeamento dos resultados da pesquisa */}
+        {/* mapeamento os resultados da requisição */}
         {searchResults.map((pokemon: PokemonData) => (
           <PokemonCard
             key={pokemon.id}
